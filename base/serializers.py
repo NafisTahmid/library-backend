@@ -24,6 +24,29 @@ class UserSerializer(serializers.ModelSerializer):
             name = obj.email
         return name
         
+class CreateUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    isAdmin = serializers.BooleanField(required=False, default=False)
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'password', 'isAdmin']
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        is_admin = validated_data.pop('isAdmin', False)
+        
+        user = User.objects.create(
+            **validated_data,
+            is_staff=is_admin
+        )
+        user.set_password(password)
+        user.save()
+        return user
+
+    def to_representation(self, instance):
+        # Convert the created user to the same format as UserSerializer
+        return UserSerializer(instance).data
 
 class UserSerializerWithToken(UserSerializer):
     name = serializers.SerializerMethodField(read_only=True)
