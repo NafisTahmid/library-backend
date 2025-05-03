@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Book, Order, OrderItem, ShippingAddress, Review
+from .models import Book, Order, OrderItem, ShippingAddress, Review, WishList
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
@@ -25,24 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
         return name
         
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    isAdmin = serializers.BooleanField(required=False, default=False)
-    
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'password', 'isAdmin']
-    
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        is_admin = validated_data.pop('isAdmin', False)
-        
-        user = User.objects.create(
-            **validated_data,
-            is_staff=is_admin
-        )
-        user.set_password(password)
-        user.save()
-        return user
+        fields = ['id', '_id', 'username', 'email', 'first_name', 'is_staff']
 
     def to_representation(self, instance):
         # Convert the created user to the same format as UserSerializer
@@ -123,3 +108,10 @@ class OrderSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         serializer = UserSerializer(obj.user, many=False)
         return serializer.data
+    
+class WishListSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    
+    class Meta:
+        model = WishList
+        fields = ["_id", "user", "username", "name", "genre", "details"]

@@ -99,7 +99,7 @@ def uploadImage(request):
     return Response('Image was uploaded successfully :D')
 
 @api_view(['POST'])
-@csrf_exempt
+@permission_classes([IsAuthenticated])
 def createProductReview(request, pk):
     product = Book.objects.get(_id=pk)
     user = request.user
@@ -119,7 +119,7 @@ def createProductReview(request, pk):
     # 3. Create new review
     else:
         review = Review.objects.create(
-            product = product,
+            book = product,
             user = user,
             name = user.first_name,
             rating = data['rating'],
@@ -134,8 +134,8 @@ def createProductReview(request, pk):
             total += i.rating
         product.rating = total / len(reviews)
         product.save()
-
         return Response('Review added')
+    
 """Get top products"""
 @api_view(["GET"])
 def getTopBooks(request):

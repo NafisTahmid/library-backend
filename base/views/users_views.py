@@ -88,16 +88,17 @@ def getUserById(request, pk):
     return Response(serializer.data)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([IsAdminUser])
 def createUser(request):
-    serializer = CreateUserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        # Use UserSerializer to ensure consistent response format
-        response_serializer = UserSerializer(user, many=False)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user = User.objects.create(
+        username='sample@example.com',
+        email='sample@example.com',
+        first_name='Sample Name',
+        is_staff=False
+    )
+    serializer = CreateUserSerializer(user, many=False)
+    return Response(serializer.data)
 
 
 @api_view(['PUT'])
@@ -110,6 +111,9 @@ def updateUser(request, pk):
     user.username = data.get('email', user.username)
     user.email = data.get('email', user.email)
     user.is_staff = data.get('isAdmin', user.is_staff)
+    if 'password' in data:
+        user.set_password(data['password'])
+    
     user.save()
 
     serializer = UserSerializer(user, many=False)
